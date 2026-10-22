@@ -1,7 +1,6 @@
 import os
 import streamlit as st
 from google import genai
-from google.genai import types
 from pypdf import PdfReader
 from docx import Document
 
@@ -58,21 +57,10 @@ if st.button("Analyze Resume"):
                 {text}
                 """
 
-                # Configure automatic retries for transient 503 errors
-                retry_config = types.HttpRetryOptions(
-                    attempts=5,
-                    initial_delay=2.0,
-                    max_delay=10.0,
-                    http_status_codes=[503, 429, 500]
-                )
-
-                # Call Gemini API with automatic retry
+                # Direct call using gemini-2.5-flash which is widely stable on API keys
                 response = client.models.generate_content(
-                    model='gemini-3.8-flash',
+                    model='gemini-2.5-flash',
                     contents=prompt,
-                    config=types.GenerateContentConfig(
-                        http_options=types.HttpOptions(retry_options=retry_config)
-                    )
                 )
 
                 # Show the results on the web page
