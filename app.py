@@ -35,7 +35,7 @@ if st.button("Analyze Resume"):
                         text += para.text + "\n"
 
                 # Call Gemini API (assumes your GEMINI_API_KEY environment variable is set)
-                client = genai.Client()
+                client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
                 
                 prompt = f"""
                 You are an expert technical recruiter and hiring manager. 
