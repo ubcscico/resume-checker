@@ -57,15 +57,18 @@ if st.button("Analyze Resume"):
                 {text}
                 """
 
-                # Direct call using gemini-2.5-flash which is widely stable on API keys
-                response = client.models.generate_content(
-                    model='gemini-2.5-flash',
-                    contents=prompt,
+                # Call Gemini 3.8 Flash via the Interactions API
+                interaction = client.interactions.create(
+                    model='gemini-3.8-flash',
+                    input=prompt,
                 )
+
+                # Extract the output text from the interaction response
+                output_text = interaction.outputs[-1].text if interaction.outputs else interaction.text
 
                 # Show the results on the web page
                 st.subheader("Analysis Results")
-                st.markdown(response.text)
+                st.markdown(output_text)
 
             except Exception as e:
                 st.error(f"An error occurred: {e}")
