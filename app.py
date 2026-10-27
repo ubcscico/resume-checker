@@ -3,6 +3,7 @@ import streamlit as st
 from google import genai
 from pypdf import PdfReader
 from docx import Document
+import streamlit.components.v1 as components
 
 # 1. Title of your web page
 st.title("AI Resume Checker")
@@ -16,6 +17,46 @@ company_info = st.text_input("Target Company Name or Website (Optional):")
 
 # 4. Text box for the job description
 job_description = st.text_area("Paste the Job Description here:")
+
+# Helper function to render a styled copy button using raw HTML/JS
+def render_copy_button(position_label):
+    copy_html = f"""
+    <div style="margin: 10px 0;">
+        <button onclick="copyAnalysis()" style="
+            background-color: #ff4b4b;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;">
+            📋 Copy Entire Analysis ({position_label})
+        </button>
+        <span id="copy-status-{position_label}" style="margin-left: 10px; font-size: 12px; color: green; font-family: sans-serif;"></span>
+    </div>
+
+    <script>
+    function copyAnalysis() {{
+        // Finds the results container on the page dynamically
+        const resultsBox = document.getElementById('analysis-results-box');
+        if (resultsBox) {{
+            const textToCopy = resultsBox.innerText;
+            navigator.clipboard.writeText(textToCopy).then(() => {{
+                const statusSpan = document.getElementById('copy-status-{position_label}');
+                statusSpan.innerText = "Copied to clipboard!";
+                setTimeout(() => {{ statusSpan.innerText = ""; }}, 3000);
+            }}).catch(err => {{
+                alert('Failed to copy: ' + err);
+            }});
+        }} else {{
+            alert('No analysis results found to copy yet!');
+        }}
+    }}
+    </script>
+    """
+    components.html(copy_html, height=50)
 
 # 5. The magic button
 if st.button("Analyze Resume"):
@@ -65,6 +106,13 @@ if st.button("Analyze Resume"):
 
             st.subheader("Analysis Results")
             
+            # TOP COPY BUTTON
+            render_copy_button("Top")
+
+            # We wrap the results inside a designated HTML container with an ID
+            # This allows the copy button JavaScript to capture everything inside it automatically
+            results_container = st.empty()
+
             # Helper generator to stream text safely with automatic model fallback
             def generate_stream():
                 models_to_try = ['gemini-3.8-flash', 'gemini-3.5-flash-lite']
@@ -74,18 +122,23 @@ if st.button("Analyze Resume"):
                             model=model_name,
                             contents=prompt,
                         )
+                        full_response = ""
                         for chunk in response:
                             if chunk.text:
-                                yield chunk.text
+                                full_response += chunk.text
+                                # Update container live as it streams
+                                results_container.markdown(f'<div id="analysis-results-box">{full_response}</div>', unsafe_allow_html=True)
                         return  # Success: exit once streaming finishes
                     except Exception as err:
-                        # If model is overloaded (503), try the next model
                         if "503" in str(err) or "service_unavailable" in str(err):
                             continue
                         else:
                             raise err
 
-            st.write_stream(generate_stream)
+            generate_stream()
+
+            # BOTTOM COPY BUTTON
+            render_copy_button("Bottom")
 
         except Exception as e:
             st.error(f"An error occurred: {e}")
