@@ -19,14 +19,22 @@ company_info = st.text_input("Target Company Name or Website (Optional):")
 # 4. Text box for the job description
 job_description = st.text_area("Paste the Job Description here:")
 
-# Helper function to render a robust neon blue copy button using direct string passing
+# Helper function to render a rich-text formatting preserving copy button
 def render_copy_button(position_label, raw_text):
-    # Safely escape the text for JavaScript insertion
+    # Convert markdown-style sections into clean HTML tags for rich-text pasting into Word
+    formatted_html = (
+        raw_text.replace("### ", "<h3>")
+        .replace("\n\n", "<br><br>")
+        .replace("\n- ", "<br>• ")
+        .replace("**", "<b>") # Note: simple replacement works for paired markdown bolds
+    )
+    
     safe_text = json.dumps(raw_text)
+    safe_html = json.dumps(formatted_html)
     
     copy_html = f"""
     <div style="margin: 10px 0;">
-        <button onclick='copyText({safe_text}, "{position_label}")' style="
+        <button onclick='copyRichText({safe_text}, {safe_html}, "{position_label}")' style="
             background-color: #00d2ff;
             color: #0e1117;
             border: none;
@@ -38,19 +46,29 @@ def render_copy_button(position_label, raw_text):
             width: 100%;
             box-shadow: 0 0 12px rgba(0, 210, 255, 0.4);
             transition: background 0.2s ease;">
-            📋 Copy Entire Analysis ({position_label})
+            📋 Copy Formatted Analysis ({position_label})
         </button>
         <span id="copy-status-{position_label}" style="margin-left: 10px; font-size: 12px; color: #00d2ff; font-family: sans-serif; font-weight: bold;"></span>
     </div>
 
     <script>
-    function copyText(textToCopy, pos) {{
-        navigator.clipboard.writeText(textToCopy).then(() => {{
+    function copyRichText(plainText, htmlText, pos) {{
+        const clipboardItemData = {{
+            "text/plain": new Blob([plainText], {{ type: "text/plain" }}),
+            "text/html": new Blob([htmlText], {{ type: "text/html" }})
+        }};
+        
+        navigator.clipboard.write([new ClipboardItem(clipboardItemData)]).then(() => {{
             const statusSpan = document.getElementById('copy-status-' + pos);
-            statusSpan.innerText = "Copied to clipboard!";
+            statusSpan.innerText = "Copied with formatting!";
             setTimeout(() => {{ statusSpan.innerText = ""; }}, 3000);
         }}).catch(err => {{
-            alert('Failed to copy: ' + err);
+            // Fallback to plain text copy if browser security blocks rich clipboard item
+            navigator.clipboard.writeText(plainText).then(() => {{
+                const statusSpan = document.getElementById('copy-status-' + pos);
+                statusSpan.innerText = "Copied (Plain Text)!";
+                setTimeout(() => {{ statusSpan.innerText = ""; }}, 3000);
+            }});
         }});
     }}
     </script>
@@ -83,12 +101,22 @@ if st.button("Analyze Resume"):
             You are an expert technical recruiter and hiring manager. 
             Analyze the following resume against the provided job description for the company/organization: {company_info if company_info else "General Industry"}. 
             
-            Provide a detailed critique with the following sections:
-            1. **Match Score:** An estimated percentage match (0-100%).
-            2. **Key Strengths:** Where the candidate strongly aligns with the role and company context.
-            3. **Weaknesses & Gaps:** Missing hard skills, experience gaps, or weak impact statements.
-            4. **Missing Keywords:** Critical technical terms or industry keywords present in the job description or typical for this role/company but absent from the resume.
-            5. **Actionable Recommendations:** Specific bullet points on how to rewrite sections to improve the resume.
+            Provide a detailed critique using clear Markdown headings (e.g., using ### for each section header) with the following exact structure:
+            
+            ### Match Score
+            An estimated percentage match (0-100%) followed by a brief summary overview paragraph.
+            
+            ### Key Strengths
+            Where the candidate strongly aligns with the role and company context.
+            
+            ### Weaknesses and Gaps
+            Missing hard skills, experience gaps, or weak impact statements.
+            
+            ### Missing Keywords
+            Critical technical terms or industry keywords present in the job description or typical for this role/company but absent from the resume.
+            
+            ### Actionable Recommendations
+            Specific bullet points on how to rewrite sections to improve the resume.
 
             ---
             COMPANY CONTEXT:
@@ -105,7 +133,6 @@ if st.button("Analyze Resume"):
 
             st.subheader("Analysis Results")
             
-            # Placeholders for buttons and results container
             top_button_placeholder = st.empty()
             results_container = st.empty()
             bottom_button_placeholder = st.empty()
@@ -123,19 +150,16 @@ if st.button("Analyze Resume"):
                         for chunk in response:
                             if chunk.text:
                                 full_response += chunk.text
-                                # Update container live as it streams
                                 results_container.markdown(f'<div id="analysis-results-box">{full_response}</div>', unsafe_allow_html=True)
-                        return full_response  # Return the complete generated string when finished
+                        return full_response
                     except Exception as err:
                         if "503" in str(err) or "service_unavailable" in str(err):
                             continue
                         else:
                             raise err
 
-            # Run generation and capture the final complete text string
             complete_analysis_text = generate_stream()
 
-            # Once generation is completely finished, render the top and bottom copy buttons with the exact text baked in
             if complete_analysis_text:
                 with top_button_placeholder:
                     render_copy_button("Top", complete_analysis_text)
