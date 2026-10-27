@@ -19,14 +19,13 @@ company_info = st.text_input("Target Company Name or Website (Optional):")
 # 4. Text box for the job description
 job_description = st.text_area("Paste the Job Description here:")
 
-# Helper function to render a rich-text formatting preserving copy button
+# Helper function to render a clean neon blue copy button
 def render_copy_button(position_label, raw_text):
-    # Convert markdown-style sections into clean HTML tags for rich-text pasting into Word
     formatted_html = (
         raw_text.replace("### ", "<h3>")
         .replace("\n\n", "<br><br>")
         .replace("\n- ", "<br>• ")
-        .replace("**", "<b>") # Note: simple replacement works for paired markdown bolds
+        .replace("**", "<b>")
     )
     
     safe_text = json.dumps(raw_text)
@@ -63,7 +62,6 @@ def render_copy_button(position_label, raw_text):
             statusSpan.innerText = "Copied with formatting!";
             setTimeout(() => {{ statusSpan.innerText = ""; }}, 3000);
         }}).catch(err => {{
-            // Fallback to plain text copy if browser security blocks rich clipboard item
             navigator.clipboard.writeText(plainText).then(() => {{
                 const statusSpan = document.getElementById('copy-status-' + pos);
                 statusSpan.innerText = "Copied (Plain Text)!";
@@ -101,7 +99,7 @@ if st.button("Analyze Resume"):
             You are an expert technical recruiter and hiring manager. 
             Analyze the following resume against the provided job description for the company/organization: {company_info if company_info else "General Industry"}. 
             
-            Provide a detailed critique using clear Markdown headings (e.g., using ### for each section header) with the following exact structure:
+            Provide a detailed critique using clear Markdown headings (using standard markdown ### prefixes) with the following structure:
             
             ### Match Score
             An estimated percentage match (0-100%) followed by a brief summary overview paragraph.
@@ -150,7 +148,8 @@ if st.button("Analyze Resume"):
                         for chunk in response:
                             if chunk.text:
                                 full_response += chunk.text
-                                results_container.markdown(f'<div id="analysis-results-box">{full_response}</div>', unsafe_allow_html=True)
+                                # Stream directly to markdown so headings render properly instantly
+                                results_container.markdown(full_response)
                         return full_response
                     except Exception as err:
                         if "503" in str(err) or "service_unavailable" in str(err):
