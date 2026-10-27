@@ -18,23 +18,25 @@ company_info = st.text_input("Target Company Name or Website (Optional):")
 # 4. Text box for the job description
 job_description = st.text_area("Paste the Job Description here:")
 
-# Helper function to render a styled copy button using raw HTML/JS
+# Helper function to render a styled neon blue copy button using raw HTML/JS
 def render_copy_button(position_label):
     copy_html = f"""
     <div style="margin: 10px 0;">
         <button onclick="copyAnalysis()" style="
-            background-color: #ff4b4b;
-            color: white;
+            background-color: #00d2ff;
+            color: #0e1117;
             border: none;
-            padding: 8px 16px;
+            padding: 9px 18px;
             font-size: 14px;
             font-weight: bold;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            width: 100%;">
+            width: 100%;
+            box-shadow: 0 0 12px rgba(0, 210, 255, 0.4);
+            transition: background 0.2s ease;">
             📋 Copy Entire Analysis ({position_label})
         </button>
-        <span id="copy-status-{position_label}" style="margin-left: 10px; font-size: 12px; color: green; font-family: sans-serif;"></span>
+        <span id="copy-status-{position_label}" style="margin-left: 10px; font-size: 12px; color: #00d2ff; font-family: sans-serif; font-weight: bold;"></span>
     </div>
 
     <script>
@@ -110,7 +112,6 @@ if st.button("Analyze Resume"):
             render_copy_button("Top")
 
             # We wrap the results inside a designated HTML container with an ID
-            # This allows the copy button JavaScript to capture everything inside it automatically
             results_container = st.empty()
 
             # Helper generator to stream text safely with automatic model fallback
