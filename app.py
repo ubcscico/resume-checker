@@ -43,7 +43,7 @@ if st.button("Analyze Resume"):
             You are an expert technical recruiter, hiring manager, and career coach. 
             Analyze the following resume against the provided job description for the company/organization: {company_info if company_info else "General Industry"}. 
             
-            Provide a detailed critique using clear Markdown headings (using standard markdown ### prefixes) with the following structure:
+            Provide a detailed critique using clear Markdown headings (using standard markdown ### prefixes) with the following exact order:
             
             ### Match Score
             An estimated percentage match (0-100%) followed by a brief summary overview paragraph.
@@ -57,11 +57,11 @@ if st.button("Analyze Resume"):
             ### Missing Keywords
             Critical technical terms or industry keywords present in the job description or typical for this role/company but absent from the resume.
             
+            ### Actionable Recommendations
+            Specific bullet points on how to rewrite resume sections to improve alignment.
+
             ### Cover Letter Focus Points
             The major skills, technical experiences, and key requirements from the job description that the student should explicitly emphasize and weave into their cover letter.
-            
-            ### Actionable Recommendations
-            Specific bullet points on how to rewrite sections to improve the resume.
 
             ---
             COMPANY CONTEXT:
