@@ -3,8 +3,6 @@ import streamlit as st
 from google import genai
 from pypdf import PdfReader
 from docx import Document
-import streamlit.components.v1 as components
-import json
 
 # 1. Title of your web page
 st.title("AI Resume Checker")
@@ -18,60 +16,6 @@ company_info = st.text_input("Target Company Name or Website (Optional):")
 
 # 4. Text box for the job description
 job_description = st.text_area("Paste the Job Description here:")
-
-# Helper function to render a clean neon blue copy button without any artifact box
-def render_copy_button(position_label, raw_text):
-    formatted_html = (
-        raw_text.replace("### ", "<h3>")
-        .replace("\n\n", "<br><br>")
-        .replace("\n- ", "<br>• ")
-        .replace("**", "<b>")
-    )
-    
-    safe_text = json.dumps(raw_text)
-    safe_html = json.dumps(formatted_html)
-    
-    copy_html = f"""
-    <div style="margin: 12px 0;">
-        <button onclick='copyRichText({safe_text}, {safe_html}, "{position_label}")' style="
-            background-color: #00d2ff;
-            color: #0e1117;
-            border: none;
-            padding: 10px 18px;
-            font-size: 14px;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            width: 100%;
-            box-shadow: 0 0 12px rgba(0, 210, 255, 0.4);
-            transition: background 0.2s ease;">
-            📋 Copy Formatted Analysis ({position_label})
-        </button>
-        <div id="copy-status-{position_label}" style="margin-top: 5px; font-size: 12px; color: #00d2ff; font-family: sans-serif; font-weight: bold; text-align: center;"></div>
-    </div>
-
-    <script>
-    function copyRichText(plainText, htmlText, pos) {{
-        const clipboardItemData = {{
-            "text/plain": new Blob([plainText], {{ type: "text/plain" }}),
-            "text/html": new Blob([htmlText], {{ type: "text/html" }})
-        }};
-        
-        navigator.clipboard.write([new ClipboardItem(clipboardItemData)]).then(() => {{
-            const statusDiv = document.getElementById('copy-status-' + pos);
-            statusDiv.innerText = "Copied with formatting!";
-            setTimeout(() => {{ statusDiv.innerText = ""; }}, 3000);
-        }}).catch(err => {{
-            navigator.clipboard.writeText(plainText).then(() => {{
-                const statusDiv = document.getElementById('copy-status-' + pos);
-                statusDiv.innerText = "Copied (Plain Text)!";
-                setTimeout(() => {{ statusDiv.innerText = ""; }}, 3000);
-            }});
-        }});
-    }}
-    </script>
-    """
-    components.html(copy_html, height=60)
 
 # 5. The magic button
 if st.button("Analyze Resume"):
@@ -131,9 +75,7 @@ if st.button("Analyze Resume"):
 
             st.subheader("Analysis Results")
             
-            top_button_placeholder = st.empty()
             results_container = st.empty()
-            bottom_button_placeholder = st.empty()
 
             # Helper generator to stream text safely with automatic model fallback
             def generate_stream():
@@ -156,14 +98,7 @@ if st.button("Analyze Resume"):
                         else:
                             raise err
 
-            complete_analysis_text = generate_stream()
-
-            if complete_analysis_text:
-                with top_button_placeholder:
-                    render_copy_button("Top", complete_analysis_text)
-                    
-                with bottom_button_placeholder:
-                    render_copy_button("Bottom", complete_analysis_text)
+            generate_stream()
 
         except Exception as e:
             st.error(f"An error occurred: {e}")
