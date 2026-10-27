@@ -19,7 +19,7 @@ company_info = st.text_input("Target Company Name or Website (Optional):")
 # 4. Text box for the job description
 job_description = st.text_area("Paste the Job Description here:")
 
-# Helper function to render a clean neon blue copy button
+# Helper function to render a clean neon blue copy button safely
 def render_copy_button(position_label, raw_text):
     formatted_html = (
         raw_text.replace("### ", "<h3>")
@@ -32,12 +32,12 @@ def render_copy_button(position_label, raw_text):
     safe_html = json.dumps(formatted_html)
     
     copy_html = f"""
-    <div style="margin: 10px 0;">
+    <div style="margin: 15px 0;">
         <button onclick='copyRichText({safe_text}, {safe_html}, "{position_label}")' style="
             background-color: #00d2ff;
             color: #0e1117;
             border: none;
-            padding: 9px 18px;
+            padding: 10px 20px;
             font-size: 14px;
             font-weight: bold;
             border-radius: 6px;
@@ -47,7 +47,7 @@ def render_copy_button(position_label, raw_text):
             transition: background 0.2s ease;">
             📋 Copy Formatted Analysis ({position_label})
         </button>
-        <span id="copy-status-{position_label}" style="margin-left: 10px; font-size: 12px; color: #00d2ff; font-family: sans-serif; font-weight: bold;"></span>
+        <div id="copy-status-{position_label}" style="margin-top: 5px; font-size: 12px; color: #00d2ff; font-family: sans-serif; font-weight: bold; text-align: center;"></div>
     </div>
 
     <script>
@@ -58,20 +58,20 @@ def render_copy_button(position_label, raw_text):
         }};
         
         navigator.clipboard.write([new ClipboardItem(clipboardItemData)]).then(() => {{
-            const statusSpan = document.getElementById('copy-status-' + pos);
-            statusSpan.innerText = "Copied with formatting!";
-            setTimeout(() => {{ statusSpan.innerText = ""; }}, 3000);
+            const statusDiv = document.getElementById('copy-status-' + pos);
+            statusDiv.innerText = "Copied with formatting!";
+            setTimeout(() => {{ statusDiv.innerText = ""; }}, 3000);
         }}).catch(err => {{
             navigator.clipboard.writeText(plainText).then(() => {{
-                const statusSpan = document.getElementById('copy-status-' + pos);
-                statusSpan.innerText = "Copied (Plain Text)!";
-                setTimeout(() => {{ statusSpan.innerText = ""; }}, 3000);
+                const statusDiv = document.getElementById('copy-status-' + pos);
+                statusDiv.innerText = "Copied (Plain Text)!";
+                setTimeout(() => {{ statusDiv.innerText = ""; }}, 3000);
             }});
         }});
     }}
     </script>
     """
-    components.html(copy_html, height=50)
+    components.html(copy_html, height=70)
 
 # 5. The magic button
 if st.button("Analyze Resume"):
@@ -148,7 +148,6 @@ if st.button("Analyze Resume"):
                         for chunk in response:
                             if chunk.text:
                                 full_response += chunk.text
-                                # Stream directly to markdown so headings render properly instantly
                                 results_container.markdown(full_response)
                         return full_response
                     except Exception as err:
