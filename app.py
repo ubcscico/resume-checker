@@ -40,7 +40,7 @@ if st.button("Analyze Resume"):
             client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
             prompt = f"""
-            You are an expert technical recruiter and hiring manager. 
+            You are an expert technical recruiter, hiring manager, and career coach. 
             Analyze the following resume against the provided job description for the company/organization: {company_info if company_info else "General Industry"}. 
             
             Provide a detailed critique using clear Markdown headings (using standard markdown ### prefixes) with the following structure:
@@ -56,6 +56,9 @@ if st.button("Analyze Resume"):
             
             ### Missing Keywords
             Critical technical terms or industry keywords present in the job description or typical for this role/company but absent from the resume.
+            
+            ### Cover Letter Focus Points
+            The major skills, technical experiences, and key requirements from the job description that the student should explicitly emphasize and weave into their cover letter.
             
             ### Actionable Recommendations
             Specific bullet points on how to rewrite sections to improve the resume.
