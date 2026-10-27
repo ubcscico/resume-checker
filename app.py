@@ -4,6 +4,7 @@ from google import genai
 from pypdf import PdfReader
 from docx import Document
 import streamlit.components.v1 as components
+import json
 
 # 1. Title of your web page
 st.title("AI Resume Checker")
@@ -18,11 +19,14 @@ company_info = st.text_input("Target Company Name or Website (Optional):")
 # 4. Text box for the job description
 job_description = st.text_area("Paste the Job Description here:")
 
-# Helper function to render a styled neon blue copy button using raw HTML/JS
-def render_copy_button(position_label):
+# Helper function to render a robust neon blue copy button using direct string passing
+def render_copy_button(position_label, raw_text):
+    # Safely escape the text for JavaScript insertion
+    safe_text = json.dumps(raw_text)
+    
     copy_html = f"""
     <div style="margin: 10px 0;">
-        <button onclick="copyAnalysis()" style="
+        <button onclick='copyText({safe_text}, "{position_label}")' style="
             background-color: #00d2ff;
             color: #0e1117;
             border: none;
@@ -40,21 +44,14 @@ def render_copy_button(position_label):
     </div>
 
     <script>
-    function copyAnalysis() {{
-        // Finds the results container on the page dynamically
-        const resultsBox = document.getElementById('analysis-results-box');
-        if (resultsBox) {{
-            const textToCopy = resultsBox.innerText;
-            navigator.clipboard.writeText(textToCopy).then(() => {{
-                const statusSpan = document.getElementById('copy-status-{position_label}');
-                statusSpan.innerText = "Copied to clipboard!";
-                setTimeout(() => {{ statusSpan.innerText = ""; }}, 3000);
-            }}).catch(err => {{
-                alert('Failed to copy: ' + err);
-            }});
-        }} else {{
-            alert('No analysis results found to copy yet!');
-        }}
+    function copyText(textToCopy, pos) {{
+        navigator.clipboard.writeText(textToCopy).then(() => {{
+            const statusSpan = document.getElementById('copy-status-' + pos);
+            statusSpan.innerText = "Copied to clipboard!";
+            setTimeout(() => {{ statusSpan.innerText = ""; }}, 3000);
+        }}).catch(err => {{
+            alert('Failed to copy: ' + err);
+        }});
     }}
     </script>
     """
@@ -108,11 +105,10 @@ if st.button("Analyze Resume"):
 
             st.subheader("Analysis Results")
             
-            # TOP COPY BUTTON
-            render_copy_button("Top")
-
-            # We wrap the results inside a designated HTML container with an ID
+            # Placeholders for buttons and results container
+            top_button_placeholder = st.empty()
             results_container = st.empty()
+            bottom_button_placeholder = st.empty()
 
             # Helper generator to stream text safely with automatic model fallback
             def generate_stream():
@@ -129,17 +125,23 @@ if st.button("Analyze Resume"):
                                 full_response += chunk.text
                                 # Update container live as it streams
                                 results_container.markdown(f'<div id="analysis-results-box">{full_response}</div>', unsafe_allow_html=True)
-                        return  # Success: exit once streaming finishes
+                        return full_response  # Return the complete generated string when finished
                     except Exception as err:
                         if "503" in str(err) or "service_unavailable" in str(err):
                             continue
                         else:
                             raise err
 
-            generate_stream()
+            # Run generation and capture the final complete text string
+            complete_analysis_text = generate_stream()
 
-            # BOTTOM COPY BUTTON
-            render_copy_button("Bottom")
+            # Once generation is completely finished, render the top and bottom copy buttons with the exact text baked in
+            if complete_analysis_text:
+                with top_button_placeholder:
+                    render_copy_button("Top", complete_analysis_text)
+                    
+                with bottom_button_placeholder:
+                    render_copy_button("Bottom", complete_analysis_text)
 
         except Exception as e:
             st.error(f"An error occurred: {e}")
