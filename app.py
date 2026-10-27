@@ -6,15 +6,18 @@ from docx import Document
 
 # 1. Title of your web page
 st.title("AI Resume Checker")
-st.write("Upload your resume and paste the job description to find out where your resume is weak.")
+st.write("Upload your resume, paste the job description, and provide company details to find out where your resume is weak.")
 
 # 2. File uploader box for the resume
 uploaded_file = st.file_uploader("Upload your resume (PDF or Word)", type=["pdf", "docx"])
 
-# 3. Text box for the job description
+# 3. Company input box
+company_info = st.text_input("Target Company Name or Website (Optional):")
+
+# 4. Text box for the job description
 job_description = st.text_area("Paste the Job Description here:")
 
-# 4. The magic button
+# 5. The magic button
 if st.button("Analyze Resume"):
     if not uploaded_file:
         st.warning("Please upload a resume first.")
@@ -38,14 +41,18 @@ if st.button("Analyze Resume"):
 
             prompt = f"""
             You are an expert technical recruiter and hiring manager. 
-            Analyze the following resume against the provided job description. 
+            Analyze the following resume against the provided job description for the company/organization: {company_info if company_info else "General Industry"}. 
             
             Provide a detailed critique with the following sections:
             1. **Match Score:** An estimated percentage match (0-100%).
-            2. **Key Strengths:** Where the candidate strongly aligns with the role.
+            2. **Key Strengths:** Where the candidate strongly aligns with the role and company context.
             3. **Weaknesses & Gaps:** Missing hard skills, experience gaps, or weak impact statements.
-            4. **Missing Keywords:** Critical technical terms or industry keywords present in the job description but absent from the resume.
+            4. **Missing Keywords:** Critical technical terms or industry keywords present in the job description or typical for this role/company but absent from the resume.
             5. **Actionable Recommendations:** Specific bullet points on how to rewrite sections to improve the resume.
+
+            ---
+            COMPANY CONTEXT:
+            {company_info if company_info else "Not specified"}
 
             ---
             JOB DESCRIPTION:
@@ -74,7 +81,6 @@ if st.button("Analyze Resume"):
                     except Exception as err:
                         # If model is overloaded (503), try the next model
                         if "503" in str(err) or "service_unavailable" in str(err):
-                            st.info(f"Primary model busy, switching to high-speed backup ({model_name} -> gemini-3.5-flash-lite)...")
                             continue
                         else:
                             raise err
