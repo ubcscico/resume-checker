@@ -45,9 +45,6 @@ if st.button("Analyze Resume"):
             
             Provide a detailed critique using clear Markdown headings (using standard markdown ### prefixes) with the following exact order:
             
-            ### Match Score
-            An estimated percentage match (0-100%) followed by a brief summary overview paragraph.
-            
             ### Key Strengths
             Where the candidate strongly aligns with the role and company context.
             
