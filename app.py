@@ -85,9 +85,9 @@ if st.button("Analyze Resume"):
             
             results_container = st.empty()
 
-            # Helper generator to stream text safely with automatic model fallback
+            # Helper generator to stream text safely with automatic model fallback using current stable identifiers
             def generate_stream():
-                models_to_try = ['gemini-2.5-flash', 'gemini-2.5-flash-lite']
+                models_to_try = ['gemini-3.8-flash', 'gemini-3.5-flash-lite']
                 for model_name in models_to_try:
                     try:
                         response = client.models.generate_content_stream(
