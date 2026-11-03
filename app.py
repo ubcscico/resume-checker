@@ -36,6 +36,11 @@ if st.button("Analyze Resume"):
                 for para in doc.paragraphs:
                     text += para.text + "\n"
 
+            # Check if API key exists in secrets
+            if "GEMINI_API_KEY" not in st.secrets:
+                st.error("Error: GEMINI_API_KEY is missing from Streamlit Secrets!")
+                st.stop()
+
             # Initialize Gemini Client with API key from secrets
             client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
@@ -44,6 +49,9 @@ if st.button("Analyze Resume"):
             Analyze the following resume against the provided job description for the company/organization: {company_info if company_info else "General Industry"}. 
             
             Provide a detailed critique using clear Markdown headings (using standard markdown ### prefixes) with the following exact order:
+            
+            ### Match Score
+            An estimated percentage match (0-100%) followed by a brief summary overview paragraph explaining why this score was given.
             
             ### Key Strengths
             Where the candidate strongly aligns with the role and company context.
@@ -79,7 +87,7 @@ if st.button("Analyze Resume"):
 
             # Helper generator to stream text safely with automatic model fallback
             def generate_stream():
-                models_to_try = ['gemini-3.8-flash', 'gemini-3.5-flash-lite']
+                models_to_try = ['gemini-2.5-flash', 'gemini-2.5-flash-lite']
                 for model_name in models_to_try:
                     try:
                         response = client.models.generate_content_stream(
@@ -92,13 +100,11 @@ if st.button("Analyze Resume"):
                                 full_response += chunk.text
                                 results_container.markdown(full_response)
                         return full_response
-                    except Exception as err:
-                        if "503" in str(err) or "service_unavailable" in str(err):
-                            continue
-                        else:
-                            raise err
+                    except Exception as model_err:
+                        continue
+                raise Exception("All model fallbacks failed. Please check API availability.")
 
             generate_stream()
 
         except Exception as e:
-            st.error(f"An error occurred: {e}")
+            st.error(f"An error occurred during analysis: {e}")
